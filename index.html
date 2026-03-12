@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG Mundo Infinito - Habilidades e Inventário</title>
+    <style>
+        :root { 
+            --bg: #0d0d0d; 
+            --panel: #1a1a1a; 
+            --border: #333; 
+            --text: #eee; 
+            --gold: #f1c40f; 
+            --blue: #2e86de; 
+            --red: #ff4757; 
+        }
+
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            text-align: center; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            overflow: hidden; 
+        }
+
+        #ui { 
+            background: var(--panel); 
+            padding: 15px; 
+            border-bottom: 2px solid var(--border); 
+            width: 100%; 
+            display: flex; 
+            justify-content: center; 
+            gap: 20px; 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+        }
+
+        .stat-group { display: flex; flex-direction: column; align-items: center; min-width: 130px; }
+        .stat-label { font-size: 0.7rem; text-transform: uppercase; color: #888; }
+
+        .barra { width: 140px; height: 10px; background: #333; border-radius: 5px; overflow: hidden; margin-top: 5px; border: 1px solid #444; }
+        .barra-interna { height: 100%; width: 100%; transition: width 0.3s; }
+        #vidaBarra { background: var(--red); }
+        #manaBarra { background: var(--blue); }
+
+        #container-principal { display: flex; gap: 15px; padding: 20px; align-items: flex-start; position: relative; }
+        #mapa-container { position: relative; border: 3px solid #333; background: #000; }
+        #mapa { display: grid; grid-template-columns: repeat(25, 24px); gap: 1px; }
+
+        #mini-inv { 
+            position: absolute; bottom: 10px; right: 10px; 
+            background: rgba(26, 26, 26, 0.9); border: 1px solid var(--gold); 
+            padding: 8px; border-radius: 4px; font-size: 0.7rem; text-align: left; 
+            pointer-events: none; z-index: 10; line-height: 1.4; 
+        }
+
+        #lateral { display: flex; flex-direction: column; gap: 10px; width: 300px; height: 625px; }
+        #log { flex-grow: 1; background: var(--panel); padding: 12px; font-size: 0.8rem; overflow-y: auto; text-align: left; border-radius: 4px; border: 1px solid var(--border); }
+        .box-info { background: #222; padding: 10px; border-radius: 4px; text-align: left; font-size: 0.8rem; border: 1px solid #444; }
+        
+        .tile { width: 24px; height: 24px; }
+        .grass { background: #2ecc71; } 
+        .water { background: #3498db; }
+        .forest { background: #145a32; } 
+        .mountain { background: #7f8c8d; } 
+        .hidden { background: #000; }
+        .player { background: #f1c40f; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 10px #f1c40f; z-index: 2; }
+        .npc-mark::after { content: "💀"; display: block; font-size: 14px; text-align: center; line-height: 24px; }
+
+        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999; }
+        #modal-inv { 
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            background: #1a1a1a; border: 2px solid var(--gold); width: 420px; z-index: 1000; border-radius: 8px; overflow: hidden; 
+        }
+
+        .aba-header { display: flex; background: #222; }
+        .aba-btn { flex: 1; padding: 12px; border: none; background: none; color: #888; cursor: pointer; font-weight: bold; }
+        .aba-btn.active { color: var(--gold); background: #1a1a1a; border-bottom: 2px solid var(--gold); }
+        .aba-content { padding: 20px; height: 280px; overflow-y: auto; text-align: left; }
+
+        .item-slot { 
+            display: flex; align-items: center; gap: 10px; padding: 10px; 
+            background: #252525; border: 1px solid #333; border-radius: 4px; 
+            cursor: pointer; margin-bottom: 10px; transition: 0.2s; 
+        }
+        .item-slot:hover { border-color: var(--gold); background: #333; }
+        .item-slot.selected { border-color: var(--gold); background: #2a2a10; }
+
+        .item-controls { display: none; margin-top: 15px; padding: 10px; background: #222; border-radius: 4px; border: 1px dotted #444; }
+        .btn-usar { background: var(--blue); color: white; border: none; padding: 6px 12px; cursor: pointer; border-radius: 3px; font-weight: bold; float: right; }
+        .btn-vender { background: #444; color: #888; border: none; padding: 6px 12px; cursor: default; border-radius: 3px; float: left; }
+        .btn-reset { background: #c0392b; color: white; border: none; padding: 8px 16px; cursor: pointer; border-radius: 4px; margin-top: 15px; width: 100%; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="ui">
+    <div class="stat-group"><span class="stat-label">Herói</span><span id="uiClasse">---</span></div>
+    <div class="stat-group">
+        <span class="stat-label">Vida</span>
+        <div class="barra"><div id="vidaBarra" class="barra-interna"></div></div>
+        <small id="txtVida">0/0</small>
+    </div>
+    <div class="stat-group">
+        <span class="stat-label">Mana</span>
+        <div class="barra"><div id="manaBarra" class="barra-interna"></div></div>
+        <small id="txtMana">0/0</small>
+    </div>
+    <div class="stat-group"><span class="stat-label">Nível</span><span id="uiNivel">1</span></div>
+    <div class="stat-group"><span class="stat-label">Ouro</span><span>💰 <span id="uiDinheiro">0</span></span></div>
+</div>
+
+<div id="container-principal">
+    <div id="mapa-container">
+        <div id="mapa"></div>
+        <div id="mini-inv">
+            🎒 <b>H: Inventário</b><br>
+            🧪 Poções: <span id="miniPocoes">0</span><br>
+            ⚔️ Dano: <span id="miniDano">0</span>
+        </div>
+    </div>
+    <div id="lateral">
+        <div id="log"></div>
+        <div id="skills-info" class="box-info">
+            <strong>⚔️ Árvore de Habilidades:</strong>
+            <div id="lista-skills"></div>
+        </div>
+    </div>
+</div>
+
+<div id="overlay"></div>
+<div id="modal-inv">
+    <div class="aba-header">
+        <button class="aba-btn active" onclick="mudarAba(event, 'aba-itens')">ITENS</button>
+        <button class="aba-btn" onclick="mudarAba(event, 'aba-equips')">EQUIP.</button>
+        <button class="aba-btn" onclick="mudarAba(event, 'aba-status')">STATUS</button>
+    </div>
+    
+    <div id="aba-itens" class="aba-content" style="display: block;">
+        <div class="item-slot" id="slot-pocao" onclick="selecionarItem('pocao')">
+            <span style="font-size: 20px;">🧪</span>
+            <div>
+                <b style="color: var(--red);">Poção de Vida</b><br>
+                <small>Quantidade: <span id="invPocoes">0</span></small>
+            </div>
+        </div>
+        <div id="pocao-detalhes" class="item-controls">
+            <small style="display:block; margin-bottom: 10px; color: #aaa;">Recupera 40% da vida total instantaneamente.</small>
+            <button class="btn-vender">VENDER (Indisponível)</button>
+            <button class="btn-usar" onclick="usarPocao()">USAR</button>
+            <div style="clear:both;"></div>
+        </div>
+        <button class="btn-reset" onclick="resetarJogo()">RESETAR JOGO (apaga tudo)</button>
+    </div>
+
+    <div id="aba-equips" class="aba-content" style="display: none;">
+        <h3 style="color: var(--gold);">Equipamento Atual</h3>
+        <p>⚔️ Arma: Espada de Aprendiz</p>
+        <p>🛡️ Armadura: Trapos de Aventureiro</p>
+    </div>
+
+    <div id="aba-status" class="aba-content" style="display: none;">
+        <h3 style="color: var(--gold);">Status Detalhados</h3>
+        <p>✨ XP: <span id="invXP">0</span></p>
+        <p>⚡ Regeneração Mana: 2/s</p>
+    </div>
+
+    <div style="padding: 10px; background: #222; text-align: right;">
+        <button onclick="alternarInventario()" style="background: #444; color: white; border: none; padding: 5px 15px; cursor: pointer; border-radius: 4px;">Fechar (H)</button>
+    </div>
+</div>
+
+<script>
+    // Configurações
+    const WORLD_SEED = 42;
+    const WORLD_NOISE_SCALE = 0.08;
+
+    const CLASSES = {
+        "Guerreiro": { vida: 180, mana: 50, dano: 20, skills: [{ nome: "Corte Rápido", nivel: 1, mana: 10, mult: 1.5 }, { nome: "Impacto Terrestre", nivel: 3, mana: 20, mult: 2.5 }, { nome: "Tormenta de Aço", nivel: 5, mana: 35, mult: 4.5 }], ult: { nome: "COLOSSO DIVINO", nivel: 7, mult: 10.0, recarga: 5 } },
+        "Mago": { vida: 90, mana: 180, dano: 12, skills: [{ nome: "Dardo de Gelo", nivel: 1, mana: 15, mult: 2.0 }, { nome: "Explosão de Fogo", nivel: 3, mana: 35, mult: 4.0 }, { nome: "Relâmpago Arcano", nivel: 5, mana: 60, mult: 8.0 }], ult: { nome: "APOCALIPSE", nivel: 7, mult: 18.0, recarga: 5 } },
+        "Arqueiro": { vida: 120, mana: 90, dano: 25, skills: [{ nome: "Tiro Preciso", nivel: 1, mana: 12, mult: 1.7 }, { nome: "Flecha Envenenada", nivel: 3, mana: 25, mult: 3.0 }, { nome: "Saraivada", nivel: 5, mana: 40, mult: 5.5 }], ult: { nome: "FLECHA DO DESTINO", nivel: 7, mult: 12.0, recarga: 5 } }
+    };
+
+    let jogador = { 
+        x: 0, y: 0, classe: "", nivel: 1, xp: 0, xpProx: 100, 
+        vidaMax: 100, vida: 100, manaMax: 50, mana: 50, 
+        danoBase: 20, dinheiro: 50, pocoes: 3, ultCharge: 0 
+    };
+
+    let mundo = {}; 
+    let explorado = {}; 
+    let npcs = {}; 
+    let emCombate = false;
+
+    // Sistema de Save
+    function salvarJogo() {
+        const saveData = { jogador, mundo, explorado, npcs, seed: WORLD_SEED };
+        localStorage.setItem("rpg_mundo_infinito_save", JSON.stringify(saveData));
+    }
+
+    function carregarJogo() {
+        const saved = localStorage.getItem("rpg_mundo_infinito_save");
+        if (!saved) return false;
+        try {
+            const data = JSON.parse(saved);
+            if (data.seed !== WORLD_SEED) return false;
+            jogador = data.jogador;
+            mundo = data.mundo || {};
+            explorado = data.explorado || {};
+            npcs = data.npcs || {};
+            return true;
+        } catch (e) { return false; }
+    }
+
+    function resetarJogo() {
+        if (!confirm("Tem certeza? TODO o progresso será apagado!")) return;
+        localStorage.clear();
+        location.reload();
+    }
+
+    // Geração de Mundo
+    function noise(x, y) {
+        let n = Math.sin(x * 12.9898 + y * 78.233 + WORLD_SEED) * 43758.5453;
+        return n - Math.floor(n);
+    }
+
+    function pegarTile(x, y) {
+        let chave = `${x},${y}`;
+        if (!mundo[chave]) {
+            let v = noise(x * WORLD_NOISE_SCALE, y * WORLD_NOISE_SCALE);
+            mundo[chave] = v < 0.15 ? "water" : v < 0.30 ? "forest" : v < 0.45 ? "mountain" : "grass";
+            if ((mundo[chave] === "grass" || mundo[chave] === "forest") && Math.random() < 0.04) {
+                npcs[chave] = { vida: 50 + (jogador.nivel * 15) };
+            }
+        }
+        return mundo[chave];
+    }
+
+    // Loop de Regeneração
+    setInterval(() => {
+        if (!emCombate && jogador.mana < jogador.manaMax) {
+            jogador.mana = Math.min(jogador.manaMax, jogador.mana + 2);
+            atualizarUI();
+            salvarJogo();
+        }
+    }, 1000);
+
+    // Interface
+    function mudarAba(evt, abaNome) {
+        document.querySelectorAll(".aba-content").forEach(el => el.style.display = "none");
+        document.querySelectorAll(".aba-btn").forEach(el => el.classList.remove("active"));
+        document.getElementById(abaNome).style.display = "block";
+        evt.currentTarget.classList.add("active");
+    }
+
+    function alternarInventario() {
+        const modal = document.getElementById("modal-inv");
+        const overlay = document.getElementById("overlay");
+        const estaAberto = modal.style.display === "block";
+        if (!estaAberto && emCombate) return;
+        modal.style.display = estaAberto ? "none" : "block";
+        overlay.style.display = estaAberto ? "none" : "block";
+        atualizarUI();
+    }
+
+    function selecionarItem(id) {
+        const detalhe = document.getElementById("pocao-detalhes");
+        detalhe.style.display = detalhe.style.display === "block" ? "none" : "block";
+    }
+
+    function usarPocao() {
+        if (jogador.pocoes > 0 && jogador.vida < jogador.vidaMax) {
+            jogador.pocoes--;
+            let cura = Math.floor(jogador.vidaMax * 0.4);
+            jogador.vida = Math.min(jogador.vidaMax, jogador.vida + cura);
+            adicionarLog(`Poção usada! +${cura} Vida`, "#2ecc71");
+            atualizarUI();
+            salvarJogo();
+        } else if (jogador.vida >= jogador.vidaMax) {
+            alert("Vida cheia!");
+        } else {
+            alert("Sem poções!");
+        }
+    }
+
+    function atualizarUI() {
+        document.getElementById("uiClasse").textContent = jogador.classe || "---";
+        document.getElementById("uiNivel").textContent = jogador.nivel;
+        document.getElementById("uiDinheiro").textContent = jogador.dinheiro;
+        document.getElementById("txtVida").textContent = `${Math.floor(jogador.vida)}/${jogador.vidaMax}`;
+        document.getElementById("txtMana").textContent = `${Math.floor(jogador.mana)}/${jogador.manaMax}`;
+        document.getElementById("vidaBarra").style.width = (jogador.vida / jogador.vidaMax * 100) + "%";
+        document.getElementById("manaBarra").style.width = (jogador.mana / jogador.manaMax * 100) + "%";
+        document.getElementById("miniPocoes").textContent = jogador.pocoes;
+        document.getElementById("invPocoes").textContent = jogador.pocoes;
+        document.getElementById("miniDano").textContent = jogador.danoBase;
+        document.getElementById("invXP").textContent = `${Math.floor(jogador.xp)} / ${Math.floor(jogador.xpProx)}`;
+
+        const sDiv = document.getElementById("lista-skills");
+        if (jogador.classe) {
+            let html = "";
+            CLASSES[jogador.classe].skills.forEach(s => {
+                let tranca = jogador.nivel < s.nivel ? "🔒" : "✨";
+                html += `<div>${tranca} Lv.${s.nivel}: ${s.nome}</div>`;
+            });
+            let u = CLASSES[jogador.classe].ult;
+            html += `<div style="margin-top:5px; color:var(--gold)">${jogador.nivel < u.nivel ? "🔒" : "🔥"} Lv.${u.nivel}: ${u.nome}</div>`;
+            sDiv.innerHTML = html;
+        }
+    }
+
+    function adicionarLog(msg, cor = "#eee") {
+        const logDiv = document.getElementById("log");
+        logDiv.innerHTML = `<div style="margin-bottom:5px; color:${cor}">> ${msg}</div>` + logDiv.innerHTML;
+    }
+
+    // Combate
+    function iniciarCombate(inimigo, chave) {
+        emCombate = true;
+        jogador.ultCharge = 0;
+        adicionarLog("⚠️ Inimigo detectado!", "#ff4757");
+
+        setTimeout(() => {
+            while (emCombate) {
+                jogador.ultCharge++;
+                let cUlt = CLASSES[jogador.classe].ult;
+                let canUlt = (jogador.nivel >= cUlt.nivel && jogador.ultCharge >= cUlt.recarga);
+                
+                let acao = prompt(`Inimigo: ${Math.max(0, inimigo.vida)} HP\nSua Vida: ${Math.floor(jogador.vida)}\n\n1-Ataque 2-Skills 3-Poção 4-ULTIMATE 0-Fugir`);
+
+                if (acao === "1") {
+                    let d = jogador.danoBase + Math.floor(Math.random() * 5);
+                    inimigo.vida -= d;
+                    adicionarLog(`Você atacou: ${d} dano`, "#e74c3c");
+                } else if (acao === "2") {
+                    let skills = CLASSES[jogador.classe].skills.filter(s => jogador.nivel >= s.nivel);
+                    let sEsc = prompt(skills.map((s, i) => `${i+1}-${s.nome}(${s.mana}MP)`).join("\n"));
+                    let sSel = skills[parseInt(sEsc)-1];
+                    if (sSel && jogador.mana >= sSel.mana) {
+                        jogador.mana -= sSel.mana;
+                        inimigo.vida -= Math.floor(jogador.danoBase * sSel.mult);
+                        adicionarLog(`Usou ${sSel.nome}!`, "#3498db");
+                    } else continue;
+                } else if (acao === "4" && canUlt) {
+                    inimigo.vida -= Math.floor(jogador.danoBase * cUlt.mult);
+                    jogador.ultCharge = 0;
+                    adicionarLog(`ULTIMATE: ${cUlt.nome}!`, "#f1c40f");
+                } else if (acao === "0") {
+                    emCombate = false; break;
+                } else if (acao === "3") {
+                    usarPocao(); continue;
+                } else continue;
+
+                if (inimigo.vida <= 0) {
+                    adicionarLog("Vitória! +60XP +25G", "#2ecc71");
+                    jogador.xp += 60; jogador.dinheiro += 25;
+                    if (jogador.xp >= jogador.xpProx) {
+                        jogador.nivel++; jogador.xp = 0; jogador.xpProx *= 1.7;
+                        jogador.vidaMax += 30; jogador.manaMax += 20;
+                        jogador.vida = jogador.vidaMax; jogador.mana = jogador.manaMax;
+                        adicionarLog("LEVEL UP!", "#f1c40f");
+                    }
+                    delete npcs[chave]; emCombate = false; break;
+                }
+
+                let dInimigo = 10 + (jogador.nivel * 3);
+                jogador.vida -= dInimigo;
+                if (jogador.vida <= 0) { alert("Game Over!"); location.reload(); return; }
+            }
+            desenhar();
+            salvarJogo();
+        }, 100);
+    }
+
+    // Movimentação e Render
+    function desenhar() {
+        const mapaDiv = document.getElementById("mapa");
+        mapaDiv.innerHTML = "";
+        for (let i = -12; i <= 12; i++) {
+            for (let j = -12; j <= 12; j++) {
+                let wx = jogador.x + j, wy = jogador.y + i;
+                let chave = `${wx},${wy}`;
+                let tile = document.createElement("div");
+                let tipo = pegarTile(wx, wy);
+
+                if (Math.sqrt(i*i + j*j) <= 12) {
+                    tile.className = `tile ${tipo}`;
+                    explorado[chave] = tipo;
+                    if (npcs[chave]) tile.classList.add("npc-mark");
+                } else if (explorado[chave]) {
+                    tile.className = `tile ${explorado[chave]}`;
+                    tile.style.opacity = "0.3";
+                } else tile.className = "tile hidden";
+
+                if (wx === jogador.x && wy === jogador.y) tile.classList.add("player");
+                mapaDiv.appendChild(tile);
+            }
+        }
+        atualizarUI();
+    }
+
+    function mover(dx, dy) {
+        if (emCombate || document.getElementById("modal-inv").style.display === "block") return;
+        let nx = jogador.x + dx, ny = jogador.y + dy;
+        let t = pegarTile(nx, ny);
+        if (t !== "water" && t !== "mountain") {
+            jogador.x = nx; jogador.y = ny;
+            if (npcs[`${nx},${ny}`]) iniciarCombate(npcs[`${nx},${ny}`], `${nx},${ny}`);
+        }
+        desenhar();
+        salvarJogo();
+    }
+
+    function selecionarClasse() {
+        let esc = prompt("Escolha: 1-Guerreiro 2-Mago 3-Arqueiro");
+        let nome = esc === "2" ? "Mago" : esc === "3" ? "Arqueiro" : "Guerreiro";
+        jogador.classe = nome;
+        jogador.vidaMax = CLASSES[nome].vida; jogador.vida = jogador.vidaMax;
+        jogador.manaMax = CLASSES[nome].mana; jogador.mana = jogador.manaMax;
+        jogador.danoBase = CLASSES[nome].dano;
+        localStorage.setItem("rpg_classe_persistente", nome);
+        atualizarUI();
+    }
+
+    window.addEventListener("keydown", e => {
+        const k = e.key.toLowerCase();
+        if (k === "h") alternarInventario();
+        if (["w","a","s","d"].includes(k)) mover(k==="d"?1:k==="a"?-1:0, k==="s"?1:k==="w"?-1:0);
+    });
+
+    if (!carregarJogo()) selecionarClasse();
+    desenhar();
+    adicionarLog("Mundo Infinito Carregado.", "#f1c40f");
+</script>
+</body>
+</html>
