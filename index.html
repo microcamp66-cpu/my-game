@@ -4,102 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RPG Mundo Infinito - Online</title>
-    <style>
-        :root { 
-            --bg: #0d0d0d; 
-            --panel: #1a1a1a; 
-            --border: #333; 
-            --text: #eee; 
-            --gold: #f1c40f; 
-            --blue: #2e86de; 
-            --red: #ff4757; 
-        }
-
-        body { 
-            background: var(--bg); 
-            color: var(--text); 
-            text-align: center; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            margin: 0; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            overflow: hidden; 
-        }
-
-        /* Tela de Login */
-        #tela-login {
-            position: fixed; width: 100%; height: 100%; 
-            background: var(--bg); z-index: 2000; 
-            display: flex; flex-direction: column; 
-            align-items: center; justify-content: center;
-        }
-
-        #tela-login input { padding: 10px; margin: 5px; width: 250px; background: #222; border: 1px solid var(--border); color: white; }
-        #tela-login button { padding: 10px 20px; cursor: pointer; border: none; font-weight: bold; margin: 5px; }
-
-        /* Interface do Jogo */
-        #ui { 
-            background: var(--panel); 
-            padding: 15px; 
-            border-bottom: 2px solid var(--border); 
-            width: 100%; 
-            display: none; /* Escondido até logar */
-            justify-content: center; 
-            gap: 20px; 
-            position: sticky; 
-            top: 0; 
-            z-index: 100; 
-        }
-
-        .stat-group { display: flex; flex-direction: column; align-items: center; min-width: 130px; }
-        .stat-label { font-size: 0.7rem; text-transform: uppercase; color: #888; }
-        .barra { width: 140px; height: 10px; background: #333; border-radius: 5px; overflow: hidden; margin-top: 5px; border: 1px solid #444; }
-        .barra-interna { height: 100%; width: 100%; transition: width 0.3s; }
-        #vidaBarra { background: var(--red); }
-        #manaBarra { background: var(--blue); }
-
-        #container-principal { display: none; gap: 15px; padding: 20px; align-items: flex-start; position: relative; }
-        #mapa-container { position: relative; border: 3px solid #333; background: #000; }
-        #mapa { display: grid; grid-template-columns: repeat(25, 24px); gap: 1px; }
-
-        #mini-inv { 
-            position: absolute; bottom: 10px; right: 10px; 
-            background: rgba(26, 26, 26, 0.9); border: 1px solid var(--gold); 
-            padding: 8px; border-radius: 4px; font-size: 0.7rem; text-align: left; 
-            pointer-events: none; z-index: 10; line-height: 1.4; 
-        }
-
-        #lateral { display: flex; flex-direction: column; gap: 10px; width: 300px; height: 625px; }
-        #log { flex-grow: 1; background: var(--panel); padding: 12px; font-size: 0.8rem; overflow-y: auto; text-align: left; border-radius: 4px; border: 1px solid var(--border); }
-        .box-info { background: #222; padding: 10px; border-radius: 4px; text-align: left; font-size: 0.8rem; border: 1px solid #444; }
-        
-        .tile { width: 24px; height: 24px; }
-        .grass { background: #2ecc71; } 
-        .water { background: #3498db; }
-        .forest { background: #145a32; } 
-        .mountain { background: #7f8c8d; } 
-        .hidden { background: #000; }
-        .player { background: #f1c40f; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 10px #f1c40f; z-index: 2; }
-        .npc-mark::after { content: "💀"; display: block; font-size: 14px; text-align: center; line-height: 24px; }
-
-        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999; }
-        #modal-inv { 
-            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            background: #1a1a1a; border: 2px solid var(--gold); width: 420px; z-index: 1000; border-radius: 8px; overflow: hidden; 
-        }
-
-        .aba-header { display: flex; background: #222; }
-        .aba-btn { flex: 1; padding: 12px; border: none; background: none; color: #888; cursor: pointer; font-weight: bold; }
-        .aba-btn.active { color: var(--gold); background: #1a1a1a; border-bottom: 2px solid var(--gold); }
-        .aba-content { padding: 20px; height: 280px; overflow-y: auto; text-align: left; }
-
-        .item-slot { 
-            display: flex; align-items: center; gap: 10px; padding: 10px; 
-            background: #252525; border: 1px solid #333; border-radius: 4px; 
-            cursor: pointer; margin-bottom: 10px; transition: 0.2s; 
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -108,8 +13,8 @@
     <input type="email" id="email" placeholder="E-mail">
     <input type="password" id="senha" placeholder="Senha">
     <div style="margin-top:15px;">
-        <button onclick="fazerLogin()" style="background:var(--blue); color:white;">ENTRAR</button>
-        <button onclick="criarConta()" style="background:var(--border); color:white;">CRIAR CONTA</button>
+        <button id="btn-entrar" style="background:var(--blue); color:white;">ENTRAR</button>
+        <button id="btn-criar" style="background:var(--border); color:white;">CRIAR CONTA</button>
     </div>
     <p id="status-login" style="margin-top:10px; font-size:0.8rem; color: var(--red)"></p>
 </div>
@@ -128,7 +33,7 @@
     </div>
     <div class="stat-group"><span class="stat-label">Nível</span><span id="uiNivel">1</span></div>
     <div class="stat-group"><span class="stat-label">Ouro</span><span>💰 <span id="uiDinheiro">0</span></span></div>
-    <button onclick="deslogar()" style="background:none; border:1px solid #444; color:#666; font-size:10px; cursor:pointer">SAIR</button>
+    <button id="btn-sair" style="background:none; border:1px solid #444; color:#666; font-size:10px; cursor:pointer">SAIR</button>
 </div>
 
 <div id="container-principal">
@@ -152,21 +57,18 @@
 <div id="overlay"></div>
 <div id="modal-inv">
     <div class="aba-header">
-        <button class="aba-btn active" onclick="mudarAba(event, 'aba-itens')">ITENS</button>
-        <button class="aba-btn" onclick="mudarAba(event, 'aba-equips')">EQUIP.</button>
-        <button class="aba-btn" onclick="mudarAba(event, 'aba-status')">STATUS</button>
+        <button class="aba-btn active" data-aba="aba-itens">ITENS</button>
+        <button class="aba-btn" data-aba="aba-equips">EQUIP.</button>
+        <button class="aba-btn" data-aba="aba-status">STATUS</button>
     </div>
     
     <div id="aba-itens" class="aba-content" style="display: block;">
-        <div class="item-slot" id="slot-pocao" onclick="selecionarItem('pocao')">
+        <div class="item-slot" id="slot-pocao">
             <span style="font-size: 20px;">🧪</span>
             <div>
                 <b style="color: var(--red);">Poção de Vida</b><br>
                 <small>Quantidade: <span id="invPocoes">0</span></small>
             </div>
-        </div>
-        <div id="pocao-detalhes" style="display:none; padding:10px; background:#222">
-            <button class="btn-usar" onclick="usarPocao()" style="background:var(--blue); color:white; border:none; padding:5px; width:100%">USAR</button>
         </div>
     </div>
 
@@ -176,158 +78,10 @@
     </div>
 
     <div style="padding: 10px; background: #222; text-align: right;">
-        <button onclick="alternarInventario()" style="background: #444; color: white; border: none; padding: 5px 15px; cursor: pointer; border-radius: 4px;">Fechar (H)</button>
+        <button id="btn-fechar-inv" style="background: #444; color: white; border: none; padding: 5px 15px; cursor: pointer; border-radius: 4px;">Fechar (H)</button>
     </div>
 </div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-  // --- COLOQUE SUAS CHAVES AQUI ---
-  const firebaseConfig = {
-    apiKey: "SUA_API_KEY",
-    authDomain: "SEU_PROJETO.firebaseapp.com",
-    projectId: "SEU_PROJETO",
-    storageBucket: "SEU_PROJETO.appspot.com",
-    messagingSenderId: "ID",
-    appId: "ID_DO_APP"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-
-  let usuarioAtual = null;
-
-  // LOGIN E CADASTRO
-  window.criarConta = async () => {
-    const email = document.getElementById('email').value;
-    const senha = document.getElementById('senha').value;
-    try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
-        alert("Conta criada! Escolha sua classe.");
-        selecionarClasse();
-    } catch (error) { document.getElementById('status-login').innerText = error.message; }
-  };
-
-  window.fazerLogin = async () => {
-    const email = document.getElementById('email').value;
-    const senha = document.getElementById('senha').value;
-    try {
-        await signInWithEmailAndPassword(auth, email, senha);
-    } catch (error) { document.getElementById('status-login').innerText = "Erro ao entrar. Verifique os dados."; }
-  };
-
-  window.deslogar = () => signOut(auth);
-
-  // MONITOR DE AUTENTICAÇÃO
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        usuarioAtual = user;
-        document.getElementById('tela-login').style.display = 'none';
-        document.getElementById('ui').style.display = 'flex';
-        document.getElementById('container-principal').style.display = 'flex';
-        
-        // Tentar carregar do Firebase
-        const docRef = doc(db, "saves", user.uid);
-        const docSnap = await getDoc(docRef);
-        
-        if (docSnap.exists()) {
-            jogador = docSnap.data();
-            desenhar();
-        } else {
-            if(!jogador.classe) selecionarClasse();
-        }
-    } else {
-        location.reload(); // Volta para o login
-    }
-  });
-
-  // FUNÇÃO DE SALVAMENTO NA NUVEM
-  window.salvarJogo = async () => {
-    if (usuarioAtual) {
-        await setDoc(doc(db, "saves", usuarioAtual.uid), jogador);
-    }
-  };
-</script>
-
-<script>
-    // Lógica interna do Jogo (Geral)
-    const CLASSES = {
-        "Guerreiro": { vida: 180, mana: 50, dano: 20, skills: [{ nome: "Corte Rápido", nivel: 1, mana: 10, mult: 1.5 }] },
-        "Mago": { vida: 90, mana: 180, dano: 12, skills: [{ nome: "Dardo de Gelo", nivel: 1, mana: 15, mult: 2.0 }] },
-        "Arqueiro": { vida: 120, mana: 90, dano: 25, skills: [{ nome: "Tiro Preciso", nivel: 1, mana: 12, mult: 1.7 }] }
-    };
-
-    let jogador = { 
-        x: 0, y: 0, classe: "", nivel: 1, xp: 0, xpProx: 100, 
-        vidaMax: 100, vida: 100, manaMax: 50, mana: 50, 
-        danoBase: 20, dinheiro: 50, pocoes: 3
-    };
-
-    let mundo = {}; let npcs = {}; let emCombate = false;
-
-    function atualizarUI() {
-        document.getElementById("uiClasse").textContent = jogador.classe || "---";
-        document.getElementById("uiNivel").textContent = jogador.nivel;
-        document.getElementById("uiDinheiro").textContent = jogador.dinheiro;
-        document.getElementById("txtVida").textContent = `${Math.floor(jogador.vida)}/${jogador.vidaMax}`;
-        document.getElementById("txtMana").textContent = `${Math.floor(jogador.mana)}/${jogador.manaMax}`;
-        document.getElementById("vidaBarra").style.width = (jogador.vida / jogador.vidaMax * 100) + "%";
-        document.getElementById("manaBarra").style.width = (jogador.mana / jogador.manaMax * 100) + "%";
-        document.getElementById("miniPocoes").textContent = jogador.pocoes;
-        document.getElementById("invPocoes").textContent = jogador.pocoes;
-        document.getElementById("miniDano").textContent = jogador.danoBase;
-        document.getElementById("invXP").textContent = `${Math.floor(jogador.xp)} / ${Math.floor(jogador.xpProx)}`;
-    }
-
-    function mover(dx, dy) {
-        if (emCombate || document.getElementById("modal-inv").style.display === "block") return;
-        jogador.x += dx; jogador.y += dy;
-        desenhar();
-        if(window.salvarJogo) window.salvarJogo();
-    }
-
-    function desenhar() {
-        const mapaDiv = document.getElementById("mapa");
-        mapaDiv.innerHTML = "";
-        for (let i = -5; i <= 5; i++) {
-            for (let j = -12; j <= 12; j++) {
-                let wx = jogador.x + j, wy = jogador.y + i;
-                let tile = document.createElement("div");
-                tile.className = "tile grass";
-                if (wx === jogador.x && wy === jogador.y) tile.classList.add("player");
-                mapaDiv.appendChild(tile);
-            }
-        }
-        atualizarUI();
-    }
-
-    function selecionarClasse() {
-        let esc = prompt("Escolha: 1-Guerreiro 2-Mago 3-Arqueiro");
-        let nome = esc === "2" ? "Mago" : esc === "3" ? "Arqueiro" : "Guerreiro";
-        jogador.classe = nome;
-        jogador.vidaMax = CLASSES[nome].vida; jogador.vida = jogador.vidaMax;
-        jogador.manaMax = CLASSES[nome].mana; jogador.mana = jogador.manaMax;
-        jogador.danoBase = CLASSES[nome].dano;
-        atualizarUI();
-        if(window.salvarJogo) window.salvarJogo();
-    }
-
-    function alternarInventario() {
-        const modal = document.getElementById("modal-inv");
-        modal.style.display = modal.style.display === "block" ? "none" : "block";
-        document.getElementById("overlay").style.display = modal.style.display;
-    }
-
-    window.addEventListener("keydown", e => {
-        const k = e.key.toLowerCase();
-        if (k === "h") alternarInventario();
-        if (["w","a","s","d"].includes(k)) mover(k==="d"?1:k==="a"?-1:0, k==="s"?1:k==="w"?-1:0);
-    });
-</script>
-
+<script type="module" src="script.js"></script>
 </body>
 </html>
