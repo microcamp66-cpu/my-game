@@ -1,0 +1,92 @@
+:root { 
+    --bg: #0d0d0d; 
+    --panel: #1a1a1a; 
+    --border: #333; 
+    --text: #eee; 
+    --gold: #f1c40f; 
+    --blue: #2e86de; 
+    --red: #ff4757; 
+}
+
+body { 
+    background: var(--bg); 
+    color: var(--text); 
+    text-align: center; 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    margin: 0; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    overflow: hidden; 
+}
+
+#tela-login {
+    position: fixed; width: 100%; height: 100%; 
+    background: var(--bg); z-index: 2000; 
+    display: flex; flex-direction: column; 
+    align-items: center; justify-content: center;
+}
+
+#tela-login input { padding: 10px; margin: 5px; width: 250px; background: #222; border: 1px solid var(--border); color: white; }
+#tela-login button { padding: 10px 20px; cursor: pointer; border: none; font-weight: bold; margin: 5px; }
+
+#ui { 
+    background: var(--panel); 
+    padding: 15px; 
+    border-bottom: 2px solid var(--border); 
+    width: 100%; 
+    display: none; 
+    justify-content: center; 
+    gap: 20px; 
+    position: sticky; 
+    top: 0; 
+    z-index: 100; 
+}
+
+.stat-group { display: flex; flex-direction: column; align-items: center; min-width: 130px; }
+.stat-label { font-size: 0.7rem; text-transform: uppercase; color: #888; }
+.barra { width: 140px; height: 10px; background: #333; border-radius: 5px; overflow: hidden; margin-top: 5px; border: 1px solid #444; }
+.barra-interna { height: 100%; width: 100%; transition: width 0.3s; }
+#vidaBarra { background: var(--red); }
+#manaBarra { background: var(--blue); }
+
+#container-principal { display: none; gap: 15px; padding: 20px; align-items: flex-start; position: relative; }
+#mapa-container { position: relative; border: 3px solid #333; background: #000; }
+#mapa { display: grid; grid-template-columns: repeat(25, 24px); gap: 1px; }
+
+#mini-inv { 
+    position: absolute; bottom: 10px; right: 10px; 
+    background: rgba(26, 26, 26, 0.9); border: 1px solid var(--gold); 
+    padding: 8px; border-radius: 4px; font-size: 0.7rem; text-align: left; 
+    pointer-events: none; z-index: 10; line-height: 1.4; 
+}
+
+#lateral { display: flex; flex-direction: column; gap: 10px; width: 300px; height: 625px; }
+#log { flex-grow: 1; background: var(--panel); padding: 12px; font-size: 0.8rem; overflow-y: auto; text-align: left; border-radius: 4px; border: 1px solid var(--border); }
+.box-info { background: #222; padding: 10px; border-radius: 4px; text-align: left; font-size: 0.8rem; border: 1px solid #444; }
+
+.tile { width: 24px; height: 24px; }
+.grass { background: #2ecc71; } 
+.water { background: #3498db; }
+.forest { background: #145a32; } 
+.mountain { background: #7f8c8d; } 
+.hidden { background: #000; }
+.player { background: #f1c40f; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 10px #f1c40f; z-index: 2; }
+.npc-mark::after { content: "💀"; display: block; font-size: 14px; text-align: center; line-height: 24px; }
+
+#overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999; }
+#modal-inv { 
+    display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+    background: #1a1a1a; border: 2px solid var(--gold); width: 420px; z-index: 1000; border-radius: 8px; overflow: hidden; 
+}
+
+.aba-header { display: flex; background: #222; }
+.aba-btn { flex: 1; padding: 12px; border: none; background: none; color: #888; cursor: pointer; font-weight: bold; }
+.aba-btn.active { color: var(--gold); background: #1a1a1a; border-bottom: 2px solid var(--gold); }
+.aba-content { padding: 20px; height: 280px; overflow-y: auto; text-align: left; }
+
+.item-slot { 
+    display: flex; align-items: center; gap: 10px; padding: 10px; 
+    background: #252525; border: 1px solid #333; border-radius: 4px; 
+    cursor: pointer; margin-bottom: 10px; transition: 0.2s; 
+}
