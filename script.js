@@ -16,6 +16,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let usuarioAtual = null;
+let emCombate = false;
 
 const CLASSES = {
     "Guerreiro": { vida: 180, mana: 50, dano: 20 },
@@ -29,7 +30,7 @@ let jogador = {
     danoBase: 20, dinheiro: 50, pocoes: 3
 };
 
-let emCombate = false;
+// --- MECÂNICAS DE JOGO ---
 
 async function salvarJogo() {
     if (usuarioAtual) {
@@ -54,11 +55,22 @@ function atualizarUI() {
 function desenharMapa() {
     const mapaDiv = document.getElementById("mapa");
     mapaDiv.innerHTML = "";
+    
     for (let i = -5; i <= 5; i++) {
         for (let j = -12; j <= 12; j++) {
             let wx = jogador.x + j, wy = jogador.y + i;
             let tile = document.createElement("div");
-            tile.className = "tile grass";
+            
+            // Gerador de terreno baseado em coordenadas (Pseudo-procedural)
+            let noise = (Math.sin(wx * 0.5) + Math.cos(wy * 0.5));
+            tile.className = "tile " + (noise > 1.2 ? "forest" : noise < -1.2 ? "water" : "grass");
+
+            // Renderiza inimigos (Caveiras) baseados na "semente" da coordenada
+            let seed = Math.abs((wx * 31 + wy * 17) % 100);
+            if (seed < 5 && noise > -1.2 && (wx !== jogador.x || wy !== jogador.y)) {
+                tile.classList.add("npc-mark");
+            }
+
             if (wx === jogador.x && wy === jogador.y) tile.classList.add("player");
             mapaDiv.appendChild(tile);
         }
@@ -68,13 +80,87 @@ function desenharMapa() {
 
 function mover(dx, dy) {
     if (emCombate || document.getElementById("modal-inv").style.display === "block") return;
-    jogador.x += dx; jogador.y += dy;
+    
+    jogador.x += dx; 
+    jogador.y += dy;
+    
     desenharMapa();
-    salvarJogo();
+    verificarEncontro();
 }
 
+function verificarEncontro() {
+    // Mesma lógica da semente do mapa para detectar se pisou no monstro
+    let seed = Math.abs((jogador.x * 31 + jogador.y * 17) % 100);
+    let noise = (Math.sin(jogador.x * 0.5) + Math.cos(jogador.y * 0.5));
+    
+    if (seed < 5 && noise > -1.2) {
+        iniciarCombate();
+    }
+}
+
+function iniciarCombate() {
+    emCombate = true;
+    const log = document.getElementById("log");
+    
+    let monstroVida = 30 + (jogador.nivel * 15);
+    let monstroDano = 5 + (jogador.nivel * 3);
+    
+    log.innerHTML += `<p style="color:var(--gold)">⚔️ <b>Combate iniciado contra Monstro Nvl ${jogador.nivel}!</b></p>`;
+
+    let turno = setInterval(() => {
+        // Jogador Ataca
+        monstroVida -= jogador.danoBase;
+        log.innerHTML += `<p>Você causou ${jogador.danoBase} de dano.</p>`;
+
+        if (monstroVida <= 0) {
+            log.innerHTML += `<p style="color:#2ecc71">✔ Vitória! +25 XP e +15 Ouro.</p>`;
+            ganharXP(25);
+            jogador.dinheiro += 15;
+            finalizarCombate(turno);
+            return;
+        }
+
+        // Monstro Ataca
+        jogador.vida -= monstroDano;
+        log.innerHTML += `<p style="color:var(--red)">Monstro causou ${monstroDano} de dano.</p>`;
+
+        if (jogador.vida <= 0) {
+            log.innerHTML += `<p style="color:var(--red)">💀 Você foi derrotado e perdeu 20 de ouro...</p>`;
+            jogador.vida = jogador.vidaMax; // Ressuscita
+            jogador.dinheiro = Math.max(0, jogador.dinheiro - 20);
+            finalizarCombate(turno);
+            return;
+        }
+
+        atualizarUI();
+        log.scrollTop = log.scrollHeight;
+    }, 1000);
+}
+
+function finalizarCombate(intervalo) {
+    clearInterval(intervalo);
+    emCombate = false;
+    salvarJogo();
+    atualizarUI();
+}
+
+function ganharXP(qtd) {
+    jogador.xp += qtd;
+    if (jogador.xp >= jogador.xpProx) {
+        jogador.nivel++;
+        jogador.xp = 0;
+        jogador.xpProx *= 1.5;
+        jogador.vidaMax += 25;
+        jogador.vida = jogador.vidaMax;
+        jogador.danoBase += 5;
+        document.getElementById("log").innerHTML += `<p style="color:var(--gold)">✨ <b>LEVEL UP! Você agora é Nível ${jogador.nivel}!</b></p>`;
+    }
+}
+
+// --- SISTEMA DE LOGIN E UI ---
+
 function selecionarClasse() {
-    let esc = prompt("Escolha: 1-Guerreiro 2-Mago 3-Arqueiro");
+    let esc = prompt("Escolha sua classe: 1-Guerreiro 2-Mago 3-Arqueiro");
     let nome = esc === "2" ? "Mago" : esc === "3" ? "Arqueiro" : "Guerreiro";
     jogador.classe = nome;
     jogador.vidaMax = CLASSES[nome].vida; jogador.vida = jogador.vidaMax;
@@ -92,7 +178,7 @@ function alternarInventario() {
     overlay.style.display = modal.style.display;
 }
 
-// Eventos de Botões
+// Eventos
 document.getElementById('btn-entrar').onclick = async () => {
     const email = document.getElementById('email').value;
     const senha = document.getElementById('senha').value;
@@ -105,13 +191,14 @@ document.getElementById('btn-criar').onclick = async () => {
     const senha = document.getElementById('senha').value;
     try { 
         await createUserWithEmailAndPassword(auth, email, senha); 
-        alert("Conta criada!");
-    } catch (e) { document.getElementById('status-login').innerText = e.message; }
+        alert("Conta criada com sucesso!");
+    } catch (e) { document.getElementById('status-login').innerText = "Erro ao criar conta."; }
 };
 
 document.getElementById('btn-sair').onclick = () => signOut(auth);
 document.getElementById('btn-fechar-inv').onclick = alternarInventario;
 
+// Sistema de abas do inventário
 document.querySelectorAll('.aba-btn').forEach(btn => {
     btn.onclick = (e) => {
         document.querySelectorAll('.aba-content').forEach(c => c.style.display = 'none');
@@ -121,12 +208,14 @@ document.querySelectorAll('.aba-btn').forEach(btn => {
     };
 });
 
+// Atalhos de teclado
 window.addEventListener("keydown", e => {
     const k = e.key.toLowerCase();
     if (k === "h") alternarInventario();
     if (["w","a","s","d"].includes(k)) mover(k==="d"?1:k==="a"?-1:0, k==="s"?1:k==="w"?-1:0);
 });
 
+// Monitor de autenticação
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         usuarioAtual = user;
