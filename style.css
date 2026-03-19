@@ -35,7 +35,7 @@ body {
     padding: 15px; 
     border-bottom: 2px solid var(--border); 
     width: 100%; 
-    display: none; 
+    display: flex; 
     justify-content: center; 
     gap: 20px; 
     position: sticky; 
@@ -45,12 +45,13 @@ body {
 
 .stat-group { display: flex; flex-direction: column; align-items: center; min-width: 130px; }
 .stat-label { font-size: 0.7rem; text-transform: uppercase; color: #888; }
+
 .barra { width: 140px; height: 10px; background: #333; border-radius: 5px; overflow: hidden; margin-top: 5px; border: 1px solid #444; }
 .barra-interna { height: 100%; width: 100%; transition: width 0.3s; }
 #vidaBarra { background: var(--red); }
 #manaBarra { background: var(--blue); }
 
-#container-principal { display: none; gap: 15px; padding: 20px; align-items: flex-start; position: relative; }
+#container-principal { display: flex; gap: 15px; padding: 20px; align-items: flex-start; position: relative; }
 #mapa-container { position: relative; border: 3px solid #333; background: #000; }
 #mapa { display: grid; grid-template-columns: repeat(25, 24px); gap: 1px; }
 
@@ -90,3 +91,10 @@ body {
     background: #252525; border: 1px solid #333; border-radius: 4px; 
     cursor: pointer; margin-bottom: 10px; transition: 0.2s; 
 }
+.item-slot:hover { border-color: var(--gold); background: #333; }
+.item-slot.selected { border-color: var(--gold); background: #2a2a10; }
+
+.item-controls { display: none; margin-top: 15px; padding: 10px; background: #222; border-radius: 4px; border: 1px dotted #444; }
+.btn-usar { background: var(--blue); color: white; border: none; padding: 6px 12px; cursor: pointer; border-radius: 3px; font-weight: bold; float: right; }
+.btn-vender { background: #444; color: #888; border: none; padding: 6px 12px; cursor: default; border-radius: 3px; float: left; }
+.btn-reset { background: #c0392b; color: white; border: none; padding: 8px 16px; cursor: pointer; border-radius: 4px; margin-top: 15px; width: 100%; font-weight: bold; }
