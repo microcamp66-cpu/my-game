@@ -57,9 +57,9 @@
 <div id="overlay"></div>
 <div id="modal-inv">
     <div class="aba-header">
-        <button class="aba-btn active" data-aba="aba-itens">ITENS</button>
-        <button class="aba-btn" data-aba="aba-equips">EQUIP.</button>
-        <button class="aba-btn" data-aba="aba-status">STATUS</button>
+        <button class="aba-btn active" onclick="mudarAba(event, 'aba-itens')">ITENS</button>
+        <button class="aba-btn" onclick="mudarAba(event, 'aba-equips')">EQUIP.</button>
+        <button class="aba-btn" onclick="mudarAba(event, 'aba-status')">STATUS</button>
     </div>
     
     <div id="aba-itens" class="aba-content" style="display: block;">
