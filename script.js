@@ -1,9 +1,7 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyCmDIOYngcgykr-3WVzhmRYyVQ8e8L4sDg",
   authDomain: "my-game---rpg.firebaseapp.com",
@@ -13,14 +11,12 @@ const firebaseConfig = {
   appId: "1:719995939743:web:05c8bb934650cfabfeabaa"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
 let usuarioAtual = null;
 
-// --- DADOS DO JOGO ---
 const CLASSES = {
     "Guerreiro": { vida: 180, mana: 50, dano: 20 },
     "Mago": { vida: 90, mana: 180, dano: 12 },
@@ -34,8 +30,6 @@ let jogador = {
 };
 
 let emCombate = false;
-
-// --- FUNÇÕES DE NÚCLEO ---
 
 async function salvarJogo() {
     if (usuarioAtual) {
@@ -90,7 +84,6 @@ function selecionarClasse() {
     salvarJogo();
 }
 
-// --- SISTEMA DE ABAS E MODAL ---
 function alternarInventario() {
     const modal = document.getElementById("modal-inv");
     const overlay = document.getElementById("overlay");
@@ -99,8 +92,7 @@ function alternarInventario() {
     overlay.style.display = modal.style.display;
 }
 
-// --- EVENTOS DE INTERFACE ---
-
+// Eventos de Botões
 document.getElementById('btn-entrar').onclick = async () => {
     const email = document.getElementById('email').value;
     const senha = document.getElementById('senha').value;
@@ -120,7 +112,6 @@ document.getElementById('btn-criar').onclick = async () => {
 document.getElementById('btn-sair').onclick = () => signOut(auth);
 document.getElementById('btn-fechar-inv').onclick = alternarInventario;
 
-// Controle de Abas
 document.querySelectorAll('.aba-btn').forEach(btn => {
     btn.onclick = (e) => {
         document.querySelectorAll('.aba-content').forEach(c => c.style.display = 'none');
@@ -130,14 +121,12 @@ document.querySelectorAll('.aba-btn').forEach(btn => {
     };
 });
 
-// Teclado
 window.addEventListener("keydown", e => {
     const k = e.key.toLowerCase();
     if (k === "h") alternarInventario();
     if (["w","a","s","d"].includes(k)) mover(k==="d"?1:k==="a"?-1:0, k==="s"?1:k==="w"?-1:0);
 });
 
-// --- MONITOR DE AUTENTICAÇÃO ---
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         usuarioAtual = user;
@@ -153,6 +142,9 @@ onAuthStateChanged(auth, async (user) => {
         }
         desenharMapa();
     } else {
+        usuarioAtual = null;
         document.getElementById('tela-login').style.display = 'flex';
+        document.getElementById('ui').style.display = 'none';
+        document.getElementById('container-principal').style.display = 'none';
     }
 });
