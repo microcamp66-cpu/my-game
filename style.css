@@ -20,22 +20,52 @@ body {
     overflow: hidden; 
 }
 
+/* TELA DE LOGIN - Fica por cima de tudo até logar */
 #tela-login {
-    position: fixed; width: 100%; height: 100%; 
-    background: var(--bg); z-index: 2000; 
-    display: flex; flex-direction: column; 
-    align-items: center; justify-content: center;
+    position: fixed; 
+    top: 0; 
+    left: 0;
+    width: 100%; 
+    height: 100%; 
+    background: var(--bg); 
+    z-index: 2000; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center;
 }
 
-#tela-login input { padding: 10px; margin: 5px; width: 250px; background: #222; border: 1px solid var(--border); color: white; }
-#tela-login button { padding: 10px 20px; cursor: pointer; border: none; font-weight: bold; margin: 5px; }
+#tela-login input { 
+    padding: 10px; 
+    margin: 5px; 
+    width: 250px; 
+    background: #222; 
+    border: 1px solid var(--border); 
+    color: white; 
+    border-radius: 4px;
+}
 
+#tela-login button { 
+    padding: 10px 20px; 
+    cursor: pointer; 
+    border: none; 
+    font-weight: bold; 
+    margin: 5px; 
+    border-radius: 4px;
+    transition: 0.2s;
+}
+
+#tela-login button:hover {
+    filter: brightness(1.2);
+}
+
+/* INTERFACE DO TOPO - Escondida no início */
 #ui { 
     background: var(--panel); 
     padding: 15px; 
     border-bottom: 2px solid var(--border); 
     width: 100%; 
-    display: flex; 
+    display: none; /* O JS mudará para 'flex' após o login */
     justify-content: center; 
     gap: 20px; 
     position: sticky; 
@@ -51,9 +81,23 @@ body {
 #vidaBarra { background: var(--red); }
 #manaBarra { background: var(--blue); }
 
-#container-principal { display: flex; gap: 15px; padding: 20px; align-items: flex-start; position: relative; }
+/* CONTAINER DO JOGO - Escondido no início */
+#container-principal { 
+    display: none; /* O JS mudará para 'flex' após o login */
+    gap: 15px; 
+    padding: 20px; 
+    align-items: flex-start; 
+    position: relative; 
+}
+
 #mapa-container { position: relative; border: 3px solid #333; background: #000; }
-#mapa { display: grid; grid-template-columns: repeat(25, 24px); gap: 1px; }
+
+/* MAPA - Ajustado para 11 colunas conforme o JS */
+#mapa { 
+    display: grid; 
+    grid-template-columns: repeat(11, 24px); 
+    gap: 1px; 
+}
 
 #mini-inv { 
     position: absolute; bottom: 10px; right: 10px; 
@@ -62,19 +106,21 @@ body {
     pointer-events: none; z-index: 10; line-height: 1.4; 
 }
 
-#lateral { display: flex; flex-direction: column; gap: 10px; width: 300px; height: 625px; }
-#log { flex-grow: 1; background: var(--panel); padding: 12px; font-size: 0.8rem; overflow-y: auto; text-align: left; border-radius: 4px; border: 1px solid var(--border); }
+#lateral { display: flex; flex-direction: column; gap: 10px; width: 300px; height: 300px; }
+#log { flex-grow: 1; background: var(--panel); padding: 12px; font-size: 0.8rem; overflow-y: auto; text-align: left; border-radius: 4px; border: 1px solid var(--border); height: 200px; }
 .box-info { background: #222; padding: 10px; border-radius: 4px; text-align: left; font-size: 0.8rem; border: 1px solid #444; }
 
+/* TILES DO MAPA */
 .tile { width: 24px; height: 24px; }
 .grass { background: #2ecc71; } 
 .water { background: #3498db; }
 .forest { background: #145a32; } 
 .mountain { background: #7f8c8d; } 
 .hidden { background: #000; }
-.player { background: #f1c40f; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 10px #f1c40f; z-index: 2; }
+.player { background: #f1c40f; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 10px #f1c40f; z-index: 2; transform: scale(0.8); }
 .npc-mark::after { content: "💀"; display: block; font-size: 14px; text-align: center; line-height: 24px; }
 
+/* MODAL DE INVENTÁRIO */
 #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999; }
 #modal-inv { 
     display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
@@ -92,9 +138,7 @@ body {
     cursor: pointer; margin-bottom: 10px; transition: 0.2s; 
 }
 .item-slot:hover { border-color: var(--gold); background: #333; }
-.item-slot.selected { border-color: var(--gold); background: #2a2a10; }
 
 .item-controls { display: none; margin-top: 15px; padding: 10px; background: #222; border-radius: 4px; border: 1px dotted #444; }
 .btn-usar { background: var(--blue); color: white; border: none; padding: 6px 12px; cursor: pointer; border-radius: 3px; font-weight: bold; float: right; }
-.btn-vender { background: #444; color: #888; border: none; padding: 6px 12px; cursor: default; border-radius: 3px; float: left; }
 .btn-reset { background: #c0392b; color: white; border: none; padding: 8px 16px; cursor: pointer; border-radius: 4px; margin-top: 15px; width: 100%; font-weight: bold; }
