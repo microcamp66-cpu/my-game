@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
 
+// --- CONFIGURAÇÃO FIREBASE ---
 const firebaseConfig = {
     apiKey: "AIzaSyCmDIOYngcgykr-3WVzhmRYyVQ8e8L4sDg",
     authDomain: "my-game---rpg.firebaseapp.com",
@@ -15,7 +16,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Configurações Globais
+// --- ESTADO DO JOGO ---
 const WORLD_SEED = 42;
 const WORLD_NOISE_SCALE = 0.08;
 let usuarioAtual = null;
@@ -24,22 +25,30 @@ let mundo = {};
 let npcs = {};
 
 const CLASSES = {
-    "Guerreiro": { vida: 180, mana: 50, dano: 20, skills: [{ nome: "Corte Rápido", nivel: 1, mana: 10, mult: 1.5 }, { nome: "Impacto Terrestre", nivel: 3, mana: 20, mult: 2.5 }], ult: { nome: "COLOSSO", nivel: 7, mult: 10.0, recarga: 5 } },
-    "Mago": { vida: 90, mana: 180, dano: 12, skills: [{ nome: "Dardo Gelo", nivel: 1, mana: 15, mult: 2.0 }, { nome: "Explosão Fogo", nivel: 3, mana: 35, mult: 4.0 }], ult: { nome: "APOCALIPSE", nivel: 7, mult: 18.0, recarga: 5 } },
-    "Arqueiro": { vida: 120, mana: 90, dano: 25, skills: [{ nome: "Tiro Preciso", nivel: 1, mana: 12, mult: 1.7 }, { nome: "Venenosa", nivel: 3, mana: 25, mult: 3.0 }], ult: { nome: "DESTINO", nivel: 7, mult: 12.0, recarga: 5 } }
+    "Guerreiro": { vida: 180, mana: 50, dano: 20, skills: [{ nome: "Corte Rápido", nivel: 1, mana: 10, mult: 1.5 }] },
+    "Mago": { vida: 90, mana: 180, dano: 12, skills: [{ nome: "Dardo de Gelo", nivel: 1, mana: 15, mult: 2.0 }] },
+    "Arqueiro": { vida: 120, mana: 90, dano: 25, skills: [{ nome: "Tiro Preciso", nivel: 1, mana: 12, mult: 1.7 }] }
 };
 
 let jogador = { 
     x: 0, y: 0, classe: "", nivel: 1, xp: 0, xpProx: 100, 
     vidaMax: 100, vida: 100, manaMax: 50, mana: 50, 
-    danoBase: 20, dinheiro: 50, pocoes: 3, ultCharge: 0 
+    danoBase: 20, dinheiro: 50, pocoes: 3
 };
 
-// --- AUTH ---
+// --- AUTENTICAÇÃO E LOGIN ---
+
 onAuthStateChanged(auth, async (user) => {
+    const telaLogin = document.getElementById('tela-login');
+    const ui = document.getElementById('ui');
+    const container = document.getElementById('container-principal');
+
     if (user) {
         usuarioAtual = user;
-        document.getElementById('tela-login').style.display = 'none';
+        telaLogin.style.display = 'none';
+        ui.style.display = 'flex';
+        container.style.display = 'flex';
+
         const docSnap = await getDoc(doc(db, "saves", user.uid));
         if (docSnap.exists()) {
             const data = docSnap.data();
@@ -50,22 +59,78 @@ onAuthStateChanged(auth, async (user) => {
             selecionarClasse();
         }
         desenhar();
+    } else {
+        telaLogin.style.display = 'flex';
+        ui.style.display = 'none';
+        container.style.display = 'none';
     }
 });
 
 document.getElementById('btn-entrar').onclick = () => {
     const email = document.getElementById('email').value;
     const senha = document.getElementById('senha').value;
-    signInWithEmailAndPassword(auth, email, senha).catch(err => alert(err.message));
+    signInWithEmailAndPassword(auth, email, senha).catch(err => {
+        document.getElementById('status-login').textContent = "Erro ao entrar: " + err.message;
+    });
 };
 
 document.getElementById('btn-criar').onclick = () => {
     const email = document.getElementById('email').value;
     const senha = document.getElementById('senha').value;
-    createUserWithEmailAndPassword(auth, email, senha).then(() => alert("Criado!")).catch(err => alert(err.message));
+    createUserWithEmailAndPassword(auth, email, senha).catch(err => {
+        document.getElementById('status-login').textContent = "Erro ao criar: " + err.message;
+    });
 };
 
-// --- MUNDO E RENDER ---
+// --- FUNÇÕES GLOBAIS (Exportadas para o HTML) ---
+
+window.mudarAba = (evt, abaNome) => {
+    document.querySelectorAll(".aba-content").forEach(el => el.style.display = "none");
+    document.querySelectorAll(".aba-btn").forEach(el => el.classList.remove("active"));
+    document.getElementById(abaNome).style.display = "block";
+    evt.currentTarget.classList.add("active");
+};
+
+window.alternarInventario = () => {
+    const modal = document.getElementById("modal-inv");
+    const overlay = document.getElementById("overlay");
+    const aberto = modal.style.display === "block";
+    modal.style.display = aberto ? "none" : "block";
+    overlay.style.display = aberto ? "none" : "block";
+};
+
+window.selecionarItem = (id) => {
+    const detalhe = document.getElementById("pocao-detalhes");
+    detalhe.style.display = detalhe.style.display === "block" ? "none" : "block";
+};
+
+window.usarPocao = () => {
+    if (jogador.pocoes > 0 && jogador.vida < jogador.vidaMax) {
+        jogador.pocoes--;
+        jogador.vida = Math.min(jogador.vidaMax, jogador.vida + (jogador.vidaMax * 0.4));
+        adicionarLog("Você usou uma poção!", "#2ecc71");
+        atualizarUI();
+        salvarJogo();
+    }
+};
+
+window.resetarJogo = async () => {
+    if (confirm("Deseja apagar seu progresso na nuvem?")) {
+        jogador = { x: 0, y: 0, classe: "", nivel: 1, xp: 0, xpProx: 100, vidaMax: 100, vida: 100, manaMax: 50, mana: 50, danoBase: 20, dinheiro: 50, pocoes: 3 };
+        mundo = {}; npcs = {};
+        await salvarJogo();
+        location.reload();
+    }
+};
+
+// --- LÓGICA DO JOGO ---
+
+async function salvarJogo() {
+    if (usuarioAtual) {
+        await setDoc(doc(db, "saves", usuarioAtual.uid), { jogador, mundo, npcs });
+    }
+}
+
 function noise(x, y) {
     let n = Math.sin(x * 12.9898 + y * 78.233 + WORLD_SEED) * 43758.5453;
     return n - Math.floor(n);
@@ -81,6 +146,20 @@ function pegarTile(x, y) {
         }
     }
     return mundo[chave];
+}
+
+function atualizarUI() {
+    document.getElementById("uiClasse").textContent = jogador.classe;
+    document.getElementById("uiNivel").textContent = jogador.nivel;
+    document.getElementById("uiDinheiro").textContent = jogador.dinheiro;
+    document.getElementById("txtVida").textContent = `${Math.floor(jogador.vida)}/${jogador.vidaMax}`;
+    document.getElementById("txtMana").textContent = `${Math.floor(jogador.mana)}/${jogador.manaMax}`;
+    document.getElementById("vidaBarra").style.width = (jogador.vida / jogador.vidaMax * 100) + "%";
+    document.getElementById("manaBarra").style.width = (jogador.mana / jogador.manaMax * 100) + "%";
+    document.getElementById("miniPocoes").textContent = jogador.pocoes;
+    document.getElementById("invPocoes").textContent = jogador.pocoes;
+    document.getElementById("miniDano").textContent = jogador.danoBase;
+    document.getElementById("invXP").textContent = jogador.xp + " / " + jogador.xpProx;
 }
 
 function desenhar() {
@@ -112,43 +191,16 @@ function mover(dx, dy) {
     salvarJogo();
 }
 
-// --- SISTEMAS ---
-async function salvarJogo() {
-    if (usuarioAtual) await setDoc(doc(db, "saves", usuarioAtual.uid), { jogador, mundo, npcs, seed: WORLD_SEED });
+function selecionarClasse() {
+    let esc = prompt("Escolha sua classe:\n1-Guerreiro\n2-Mago\n3-Arqueiro");
+    let nome = esc === "2" ? "Mago" : esc === "3" ? "Arqueiro" : "Guerreiro";
+    jogador.classe = nome;
+    const c = CLASSES[nome];
+    jogador.vidaMax = c.vida; jogador.vida = c.vida;
+    jogador.manaMax = c.mana; jogador.mana = c.mana;
+    jogador.danoBase = c.dano;
+    salvarJogo();
 }
-
-function atualizarUI() {
-    document.getElementById("uiClasse").textContent = jogador.classe;
-    document.getElementById("uiNivel").textContent = jogador.nivel;
-    document.getElementById("uiDinheiro").textContent = jogador.dinheiro;
-    document.getElementById("txtVida").textContent = `${Math.floor(jogador.vida)}/${jogador.vidaMax}`;
-    document.getElementById("txtMana").textContent = `${Math.floor(jogador.mana)}/${jogador.manaMax}`;
-    document.getElementById("vidaBarra").style.width = (jogador.vida / jogador.vidaMax * 100) + "%";
-    document.getElementById("manaBarra").style.width = (jogador.mana / jogador.manaMax * 100) + "%";
-    document.getElementById("miniPocoes").textContent = jogador.pocoes;
-    document.getElementById("invPocoes").textContent = jogador.pocoes;
-    document.getElementById("miniDano").textContent = jogador.danoBase;
-    document.getElementById("invXP").textContent = jogador.xp + "/" + jogador.xpProx;
-}
-
-// Global para o botão do HTML
-window.usarPocao = function() {
-    if (jogador.pocoes > 0 && jogador.vida < jogador.vidaMax) {
-        jogador.pocoes--;
-        jogador.vida = Math.min(jogador.vidaMax, jogador.vida + (jogador.vidaMax * 0.4));
-        adicionarLog("Curou vida!", "#2ecc71");
-        atualizarUI();
-        salvarJogo();
-    }
-};
-
-window.alternarInventario = function() {
-    const modal = document.getElementById("modal-inv");
-    const overlay = document.getElementById("overlay");
-    const aberto = modal.style.display === "block";
-    modal.style.display = aberto ? "none" : "block";
-    overlay.style.display = aberto ? "none" : "block";
-};
 
 function adicionarLog(msg, cor) {
     const log = document.getElementById("log");
@@ -157,36 +209,25 @@ function adicionarLog(msg, cor) {
 
 function iniciarCombate(inimigo, chave) {
     emCombate = true;
-    adicionarLog("Combate iniciado!", "#e74c3c");
+    adicionarLog("Um inimigo apareceu!", "#ff4757");
     setTimeout(() => {
         while(emCombate) {
-            let acao = prompt(`Inimigo: ${inimigo.vida}HP | Sua Vida: ${jogador.vida}\n1-Ataque 2-Poção 0-Fuga`);
+            let acao = prompt(`Inimigo: ${inimigo.vida}HP\nSua Vida: ${Math.floor(jogador.vida)}\n1-Atacar\n2-Poção\n0-Fugir`);
             if (acao === "1") {
                 inimigo.vida -= jogador.danoBase;
                 if (inimigo.vida <= 0) {
-                    adicionarLog("Vitória! +50XP", "#2ecc71");
+                    adicionarLog("Vitória!", "#2ecc71");
                     jogador.xp += 50; jogador.dinheiro += 20;
                     delete npcs[chave]; emCombate = false; break;
                 }
                 jogador.vida -= (10 + jogador.nivel * 2);
             } else if (acao === "2") { window.usarPocao(); }
             else { emCombate = false; break; }
-            
-            if (jogador.vida <= 0) { alert("Morreu!"); location.reload(); return; }
+            if (jogador.vida <= 0) { alert("Você foi derrotado!"); location.reload(); return; }
         }
         desenhar();
         salvarJogo();
     }, 100);
-}
-
-function selecionarClasse() {
-    let esc = prompt("1-Guerreiro 2-Mago 3-Arqueiro");
-    let nome = esc === "2" ? "Mago" : esc === "3" ? "Arqueiro" : "Guerreiro";
-    jogador.classe = nome;
-    jogador.vidaMax = CLASSES[nome].vida; jogador.vida = jogador.vidaMax;
-    jogador.manaMax = CLASSES[nome].mana; jogador.mana = jogador.manaMax;
-    jogador.danoBase = CLASSES[nome].dano;
-    salvarJogo();
 }
 
 window.addEventListener("keydown", e => {
