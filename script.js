@@ -124,15 +124,6 @@ window.resetarJogo = async () => {
     }
 };
 
-window.deslogar = () => {
-    auth.signOut().then(() => {
-        alert("Você saiu da conta!");
-        location.reload(); // Recarrega para voltar à tela de login
-    }).catch((error) => {
-        console.error("Erro ao sair:", error);
-    });
-};
-
 // --- LÓGICA DO JOGO ---
 
 async function salvarJogo() {
@@ -247,5 +238,14 @@ window.addEventListener("keydown", e => {
 window.deslogar = () => {
     auth.signOut().then(() => {
         location.reload(); // Recarrega a página para voltar ao login
+    });
+};
+
+window.deslogar = () => {
+    auth.signOut().then(() => {
+        alert("Você saiu da conta!");
+        location.reload(); // Recarrega para voltar à tela de login
+    }).catch((error) => {
+        console.error("Erro ao sair:", error);
     });
 };
