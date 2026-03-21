@@ -233,3 +233,10 @@ window.addEventListener("keydown", e => {
     if (k === "h") window.alternarInventario();
     if (["w","a","s","d"].includes(k)) mover(k==="d"?1:k==="a"?-1:0, k==="s"?1:k==="w"?-1:0);
 });
+
+// Função para deslogar
+window.deslogar = () => {
+    auth.signOut().then(() => {
+        location.reload(); // Recarrega a página para voltar ao login
+    });
+};
