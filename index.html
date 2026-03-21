@@ -19,27 +19,36 @@
     <p id="status-login" style="margin-top:10px; font-size:0.8rem; color: var(--red)"></p>
 </div>
 
-<div id="ui">
+<div id="container-principal">
+    <div id="mapa-container">
+        <div id="mapa"></div>
+        <div id="mini-inv"><div id="ui">
     <div class="stat-group"><span class="stat-label">Herói</span><span id="uiClasse">---</span></div>
+    
     <div class="stat-group">
-       <button onclick="deslogar()" style="background:red; color:white;">SAIR DO JOGO</button>
         <span class="stat-label">Vida</span>
         <div class="barra"><div id="vidaBarra" class="barra-interna"></div></div>
         <small id="txtVida">0/0</small>
     </div>
+
     <div class="stat-group">
         <span class="stat-label">Mana</span>
         <div class="barra"><div id="manaBarra" class="barra-interna"></div></div>
         <small id="txtMana">0/0</small>
     </div>
-    <div class="stat-group"><span class="stat-label">Nível</span><span id="uiNivel">1</span></div>
-    <div class="stat-group"><span class="stat-label">Ouro</span><span>💰 <span id="uiDinheiro">0</span></span></div>
-</div>
 
-<div id="container-principal">
-    <div id="mapa-container">
-        <div id="mapa"></div>
-        <div id="mini-inv">
+    <div class="stat-group"><span class="stat-label">Nível</span><span id="uiNivel">1</span></div>
+    
+    <div class="stat-group"><span class="stat-label">Ouro</span><span>💰 <span id="uiDinheiro">0</span></span></div>
+
+    <div class="stat-group">
+        <span class="stat-label">Sessão</span>
+        <button onclick="deslogar()" style="background: var(--red); color: white; border: none; padding: 2px 10px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; font-weight: bold; margin-top: 5px;">
+            SAIR
+        </button>
+    </div>
+</div>
+            
             🎒 <b>H: Inventário</b><br>
             🧪 Poções: <span id="miniPocoes">0</span><br>
             ⚔️ Dano: <span id="miniDano">0</span>
