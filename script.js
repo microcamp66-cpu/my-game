@@ -237,12 +237,6 @@ window.addEventListener("keydown", e => {
 // Função para deslogar
 window.deslogar = () => {
     auth.signOut().then(() => {
-        location.reload(); // Recarrega a página para voltar ao login
-    });
-};
-
-window.deslogar = () => {
-    auth.signOut().then(() => {
         alert("Você saiu da conta!");
         location.reload(); // Recarrega para voltar à tela de login
     }).catch((error) => {
