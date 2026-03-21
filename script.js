@@ -164,17 +164,14 @@ function atualizarUI() {
 }
 
 function desenhar() {
+    if(!jogador.classe) return;
     const mapaDiv = document.getElementById("mapa");
     mapaDiv.innerHTML = "";
-    for (let i = -5; i <= 5; i++) {
-        for (let j = -5; j <= 5; j++) {
-            let wx = jogador.x + j, wy = jogador.y + i;
-            let chave = `${wx},${wy}`;
-            let tile = document.createElement("div");
-            tile.className = `tile ${pegarTile(wx, wy)}`;
-            if (npcs[chave]) tile.classList.add("npc-mark");
-            if (wx === jogador.x && wy === jogador.y) tile.classList.add("player");
-            mapaDiv.appendChild(tile);
+    
+    // ESTA É A PARTE QUE DEFINE O TAMANHO:
+    for (let i = -5; i <= 5; i++) {   // O 'i' cuida das linhas
+        for (let j = -5; j <= 5; j++) { // O 'j' cuida das colunas
+            // ... resto do código ...
         }
     }
     atualizarUI();
