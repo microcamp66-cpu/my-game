@@ -92,10 +92,10 @@ body {
 
 #mapa-container { position: relative; border: 3px solid #333; background: #000; }
 
-/* MAPA - Ajustado para 11 colunas conforme o JS */
+/* Como estava antes (25 colunas) */
 #mapa { 
     display: grid; 
-    grid-template-columns: repeat(11, 24px); 
+    grid-template-columns: repeat(25, 24px); /* Aqui define a largura */
     gap: 1px; 
 }
 
