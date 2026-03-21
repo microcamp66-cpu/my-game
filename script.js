@@ -169,8 +169,8 @@ function desenhar() {
     mapaDiv.innerHTML = "";
     
     // ESTA É A PARTE QUE DEFINE O TAMANHO:
-    for (let i = -5; i <= 5; i++) {   // O 'i' cuida das linhas
-        for (let j = -5; j <= 5; j++) { // O 'j' cuida das colunas
+       for (let i = -12; i <= 12; i++) { 
+         for (let j = -12; j <= 12; j++) { // O 'j' cuida das colunas
             // ... resto do código ...
         }
     }
